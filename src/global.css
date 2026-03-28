@@ -1,2 +1,9 @@
 @import "tailwindcss";
 @import "uniwind";
+@import "heroui-native/styles";
+@source "../node_modules/heroui-native/lib";
+
+@theme {
+  --font-noto: "NotoSansThai_400Regular";
+  --font-noto-bold: "NotoSansThai_700Bold";
+}

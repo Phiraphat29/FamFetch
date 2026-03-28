@@ -1,31 +1,24 @@
-import { StatusBar } from "expo-status-bar";
-import { Text, View } from "react-native";
+import { View, Text } from "react-native";
+import { Button } from "heroui-native";
+import { Link } from "expo-router";
+import { Image } from "react-native";
 
-export default function App() {
+export default function Home() {
   return (
-    <View className="flex-1 bg-white dark:bg-black items-center justify-center px-8">
-      {/* Heading */}
-      <Text className="text-4xl font-extrabold text-gray-800 dark:text-white mb-3 tracking-tight">
-        🚀 Welcome
+    <View className="flex-1 items-center justify-center bg-white dark:bg-black font-noto">
+      <View className="mb-8">
+        <Image source={require("../../assets/images/logo.png")} className="w-30 h-30" />
+      </View>
+      <Text className="text-2xl font-noto-bold text-black dark:text-white mb-2">
+        FamFetch 🛒
       </Text>
+      <Text className="text-sm text-gray-500 dark:text-gray-400 mb-10 font-noto">แอปสำหรับจัดการรายการสั่งซื้อสินค้าในครอบครัว</Text>
 
-      {/* Subheading */}
-      <Text className="text-xl dark:text-white text-gray-700 mb-8 text-center leading-relaxed">
-        Build beautiful apps with{" "}
-        <Text className="text-blue-500 font-semibold">
-          Expo (Router) + Uniwind 🔥
-        </Text>
-      </Text>
-
-      {/* Instruction text */}
-      <Text className="text-base text-gray-600 dark:text-white text-center max-w-sm">
-        Start customizing your app by editing{" "}
-        <Text className="font-semibold text-gray-800 dark:text-white">
-          app/index.tsx
-        </Text>
-      </Text>
-
-      <StatusBar style="dark" />
+      <Link href="/login" asChild>
+        <Button variant="primary" className="w-1/2 rounded-full">
+          <Button.Label className="font-noto-bold">เริ่มช้อปกัน!</Button.Label>
+        </Button>
+      </Link>
     </View>
   );
 }
