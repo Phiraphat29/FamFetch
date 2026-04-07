@@ -15,12 +15,7 @@ export default function LogoutDialog({ isOpen, onOpenChange }: LogoutDialogProps
         onOpenChange(false);
     }
     return (
-        <Dialog isOpen={isOpen} onOpenChange={onOpenChange} className="w-full">
-            <Dialog.Trigger asChild>
-                <Button isIconOnly variant="secondary" className="bg-transparent ml-10" onPress={() => onOpenChange(true)}>
-                    <LogOut color="red" size={24} />
-                </Button>
-            </Dialog.Trigger>
+        <Dialog isOpen={isOpen} onOpenChange={onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay />
                 <KeyboardAvoidingView behavior="padding">

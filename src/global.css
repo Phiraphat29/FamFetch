@@ -4,6 +4,7 @@
 @source "../node_modules/heroui-native/lib";
 
 @theme {
+  --font-sans: "NotoSansThai_400Regular";
   --font-noto: "NotoSansThai_400Regular";
   --font-noto-bold: "NotoSansThai_700Bold";
 }

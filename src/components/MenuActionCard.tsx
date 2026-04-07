@@ -25,10 +25,10 @@ export default function MenuActionCard({
         <Card variant={variant as SurfaceVariant}>
             <Card.Header className="flex-row items-center gap-2">
                 {icon}
-                <Card.Title>{title}</Card.Title>
+                <Card.Title className="font-noto-bold">{title}</Card.Title>
             </Card.Header>
             <Card.Body>
-                <Card.Description>{description}</Card.Description>
+                <Card.Description className="font-noto">{description}</Card.Description>
             </Card.Body>
             <Card.Footer>
                 <Button
@@ -37,7 +37,7 @@ export default function MenuActionCard({
                     onPress={onPress}
                 >
                     <Text
-                        className={`font-bold text-center ${isOutlinedButton ? "text-black" : "text-white"
+                        className={`font-noto-bold text-center ${isOutlinedButton ? "text-black" : "text-white"
                             }`}
                     >
                         {buttonText}
