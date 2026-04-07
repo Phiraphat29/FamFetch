@@ -1,12 +1,16 @@
 {
   "expo": {
-    "scheme": "acme",
+    "scheme": "famfetch",
     "userInterfaceStyle": "automatic",
     "orientation": "default",
     "web": {
       "output": "static"
     },
     "name": "famfetch-yarn",
-    "slug": "famfetch-yarn"
+    "slug": "famfetch-yarn",
+    "plugins": [
+      "expo-web-browser",
+      "expo-font"
+    ]
   }
 }

@@ -1,21 +1,61 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import {
   NotoSansThai_400Regular,
   NotoSansThai_700Bold,
 } from "@expo-google-fonts/noto-sans-thai";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "../../src/global.css";
+import { supabase } from "../lib/supabase";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const segments = useSegments();
+
   const [fontsLoaded] = useFonts({
     NotoSansThai_400Regular,
     NotoSansThai_700Bold,
   });
+
+  const checkFamilyStatus = async (userId: string) => {
+    // await new Promise(resolve => setTimeout(resolve, 2000));
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("family_id")
+      .eq("id", userId)
+      .single();
+
+    if (error || !data?.family_id) {
+      router.replace("/create-family");
+    } else {
+      router.replace("/dashboard");
+    }
+  };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) checkFamilyStatus(session.user.id);
+      setLoading(false);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) checkFamilyStatus(session.user.id);
+      else router.replace("/login");
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -26,11 +66,15 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-      </Stack>
-    </HeroUINativeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="create-family" options={{ headerShown: false }} />
+          <Stack.Screen name="dashboard/index" options={{ headerShown: false }} />
+        </Stack>
+      </HeroUINativeProvider>
+    </GestureHandlerRootView>
   );
 }
