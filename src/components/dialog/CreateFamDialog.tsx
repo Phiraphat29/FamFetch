@@ -26,7 +26,7 @@ export default function CreateFamDialog({ isOpen, onOpenChange }: CreateFamDialo
 
             const { data: familyData, error: familyError } = await supabase
                 .from('families')
-                .insert({ name: name, invite_code: inviteCode })
+                .insert({ name: name, invite_code: inviteCode, admin_id: session.user.id })
                 .select()
                 .single();
 
