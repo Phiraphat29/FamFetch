@@ -4,6 +4,7 @@ import { Button, Popover } from "heroui-native";
 import { ChevronDown, LogOut, Settings } from "lucide-react-native";
 import LogoutDialog from "./dialog/LogoutDialog";
 import EditFamDialog from "./dialog/EditFamDialog";
+import { router } from "expo-router";
 
 interface ProfileHeaderProps {
     profile: any;
@@ -13,10 +14,11 @@ interface ProfileHeaderProps {
 export default function ProfileHeader({ profile, family }: ProfileHeaderProps) {
     const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
     const [isEditFamDialogOpen, setIsEditFamDialogOpen] = useState(false);
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
     return (
         <View className="mb-8 mt-8 w-full items-center">
-            <Popover>
+            <Popover isOpen={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <Popover.Trigger asChild>
                     <Pressable className="flex-row items-center gap-3">
                         {profile?.avatar_url ? (
@@ -70,7 +72,10 @@ export default function ProfileHeader({ profile, family }: ProfileHeaderProps) {
 
                         <Button
                             className="w-full bg-gray-100 mb-2"
-                            onPress={() => setIsEditFamDialogOpen(true)}
+                            onPress={() => {
+                                setIsPopoverOpen(false);
+                                router.push({ pathname: '/dashboard/setting', params: { familyId: family.id, familyName: family.name } });
+                            }}
                         >
                             <View className="flex-row items-center justify-center gap-2">
                                 <Settings color="black" size={18} />
@@ -95,7 +100,6 @@ export default function ProfileHeader({ profile, family }: ProfileHeaderProps) {
 
             <EditFamDialog isOpen={isEditFamDialogOpen} onOpenChange={setIsEditFamDialogOpen} familyName={family?.name} profile={profile} />
             <LogoutDialog isOpen={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen} />
-
         </View>
     );
 }

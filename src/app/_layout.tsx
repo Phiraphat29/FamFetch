@@ -68,11 +68,12 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="create-family" options={{ headerShown: false }} />
-          <Stack.Screen name="dashboard/index" options={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="create-family" />
+          <Stack.Screen name="dashboard/index" />
+          <Stack.Screen name="dashboard/setting" options={{ headerShown: true, title: 'ตั้งค่าครอบครัว' }} />
         </Stack>
       </HeroUINativeProvider>
     </GestureHandlerRootView>

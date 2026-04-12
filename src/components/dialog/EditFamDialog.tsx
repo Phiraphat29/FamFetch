@@ -1,29 +1,52 @@
-import { Text, KeyboardAvoidingView, Alert } from 'react-native'
-import { useState } from 'react'
-import { Dialog, Button, Input, Toast, useToast } from 'heroui-native';
+import { Text, KeyboardAvoidingView } from 'react-native'
+import { useEffect, useState } from 'react'
+import { Dialog, Button, Input, useToast } from 'heroui-native';
 import { supabase } from '../../lib/supabase';
 import { router } from 'expo-router';
+
+function asString(v: string | string[] | undefined): string {
+    if (v === undefined) return '';
+    return Array.isArray(v) ? (v[0] ?? '') : v;
+}
 
 interface EditFamDialogProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-    familyName: string;
-    profile: any;
+    familyName: string | string[] | undefined;
+    familyId?: string | string[];
+    profile?: any;
 }
 
-export default function EditFamDialog({ isOpen, onOpenChange, familyName, profile }: EditFamDialogProps) {
-    const [name, setName] = useState(familyName);
+export default function EditFamDialog({ isOpen, onOpenChange, familyName, familyId, profile }: EditFamDialogProps) {
+    const [name, setName] = useState(() => asString(familyName));
     const { toast } = useToast();
+
+    const resolvedFamilyId = asString(familyId) || profile?.family_id;
+
+    useEffect(() => {
+        if (isOpen) {
+            setName(asString(familyName));
+        }
+    }, [isOpen, familyName]);
 
     const handleEditFamily = async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
+            if (!resolvedFamilyId) {
+                toast.show({
+                    label: 'เกิดข้อผิดพลาด',
+                    description: 'ไม่พบรหัสครอบครัว กรุณาเปิดหน้านี้จากเมนูครอบครัวอีกครั้ง',
+                    variant: 'danger',
+                });
+                return;
+            }
+
             const { error: familyError } = await supabase
                 .from('families')
                 .update({ name: name })
-                .eq('id', profile.family_id);
+                .eq('id', resolvedFamilyId);
 
             if (familyError) throw familyError;
 
