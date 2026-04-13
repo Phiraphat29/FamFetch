@@ -3,6 +3,7 @@ import { View, Alert } from "react-native";
 import { ListGroup } from "heroui-native";
 import { Pencil, ShieldCheck, DoorOpen } from "lucide-react-native";
 import EditFamDialog from "./dialog/EditFamDialog";
+import { router } from "expo-router";
 
 interface FamilySettingsMenuProps {
     family: any;
@@ -18,9 +19,8 @@ export default function FamilySettingsMenu({
         setIsEditFamDialogOpen(true);
     };
 
-    const handleChangeAdmin = () => {
-        Alert.alert("เลือกผู้ดูแล", "เลือกสมาชิกที่จะมอบมงกุฎให้");
-        // TODO: เปิด SelectAdminDialog
+    const handleViewMembers = () => {
+        router.push({ pathname: '/dashboard/member' });
     };
 
     const handleLeaveFamily = () => {
@@ -51,11 +51,11 @@ export default function FamilySettingsMenu({
                     ]}</ListGroup.ItemContent>,
                     <ListGroup.ItemSuffix key="s" />,
                 ]}</ListGroup.Item>,
-                <ListGroup.Item key="admin" onPress={handleChangeAdmin}>{[
+                <ListGroup.Item key="admin" onPress={handleViewMembers}>{[
                     <ListGroup.ItemPrefix key="p"><View className="bg-amber-100 p-2 rounded-lg"><ShieldCheck color="#d97706" size={20} /></View></ListGroup.ItemPrefix>,
                     <ListGroup.ItemContent key="c">{[
-                        <ListGroup.ItemTitle key="t" className="font-noto-bold text-base">เลือกผู้ดูแลครอบครัว</ListGroup.ItemTitle>,
-                        <ListGroup.ItemDescription key="d" className="font-noto text-xs">จัดการสิทธิ์และมอบหมายแอดมิน</ListGroup.ItemDescription>,
+                        <ListGroup.ItemTitle key="t" className="font-noto-bold text-base">ดูสมาชิกครอบครัว</ListGroup.ItemTitle>,
+                        <ListGroup.ItemDescription key="d" className="font-noto text-xs">ดูสมาชิกครอบครัวและจัดการสิทธิ์</ListGroup.ItemDescription>,
                     ]}</ListGroup.ItemContent>,
                     <ListGroup.ItemSuffix key="s" />,
                 ]}</ListGroup.Item>,

@@ -1,0 +1,44 @@
+# Project context: FamFetch (Family Inventory & Shopping List App)
+
+You are an expert React Native (Expo) developer specializing in Supabase and Tailwind CSS.
+
+## Core Tech Stack
+
+- Framework: React Native with Expo (SDK)
+- Routing: Expo Router (`expo-router`)
+- Backend/DB: Supabase (Auth & PostgreSQL)
+- Styling: Tailwind CSS (via Uniwind / NativeWind)
+- UI Component Library: HeroUI Native (`heroui-native`)
+- Icons: `lucide-react-native`
+
+## Strict Guidelines & Rules
+
+### 1. Typography (CRITICAL)
+
+- Every time you write a `<Text>` component, you MUST include `font-noto` (for regular text) or `font-noto-bold` (for bold text) in its `className`.
+- Example: `<Text className="font-noto text-base text-gray-500">Hello</Text>`
+- Example: `<Text className="font-noto-bold text-lg text-black">Title</Text>`
+
+### 2. UI Components & Layouts
+
+- Prioritize using `heroui-native` components (e.g., Button, Card, Popover, ListGroup, Input) whenever possible to maintain a consistent UI.
+- IMPORTANT: HeroUI Native uses the Compound Components pattern. For example, use `<ListGroup.ItemPrefix>` and `<ListGroup.ItemSuffix>` instead of passing `startContent` or `endContent` as props.
+- Use `lucide-react-native` for all icons. Do not use `@expo/vector-icons`.
+- Use Tailwind CSS (`className`) for styling. Keep it minimalist and clean.
+
+### 3. Navigation
+
+- Always use `expo-router` for navigation (`useRouter`, `router.push`, `router.replace`).
+- Pass parameters via URL strings or objects, and retrieve them using `useLocalSearchParams()`.
+
+### 4. Database & Logic
+
+- Always consult `schema.sql` (if available) to understand the database structure before writing any Supabase queries.
+- Write clean, type-safe TypeScript. Avoid `any` where possible.
+- When deleting or modifying data (like leaving a family or transferring admin rights), always write logic that checks for edge cases (e.g., preventing the last admin from leaving without assigning a new one).
+
+### 5. Coding Style
+
+- Write functional, modular React components.
+- Keep components concise. Separate complex logic into helper functions or hooks if necessary.
+- Return early to avoid deep nesting.

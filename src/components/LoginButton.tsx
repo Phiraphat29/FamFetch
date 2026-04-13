@@ -16,6 +16,7 @@ export default function LoginButton() {
     const handleGoogleSignIn = async () => {
         try {
             const redirectUri = makeRedirectUri();
+            console.log(redirectUri);
 
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: "google",

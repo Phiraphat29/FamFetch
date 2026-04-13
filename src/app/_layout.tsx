@@ -74,6 +74,7 @@ export default function RootLayout() {
           <Stack.Screen name="create-family" />
           <Stack.Screen name="dashboard/index" />
           <Stack.Screen name="dashboard/setting" options={{ headerShown: true, title: 'ตั้งค่าครอบครัว' }} />
+          <Stack.Screen name="dashboard/member" options={{ headerShown: true, title: 'รายชื่อสมาชิกครอบครัว' }} />
         </Stack>
       </HeroUINativeProvider>
     </GestureHandlerRootView>
