@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { View, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View } from "react-native";
 import { ListGroup } from "heroui-native";
 import { Pencil, ShieldCheck, DoorOpen } from "lucide-react-native";
 import EditFamDialog from "./dialog/EditFamDialog";
 import { router } from "expo-router";
+import { supabase } from "../lib/supabase";
+import LeaveFamilyDialog from "./dialog/LeaveFamilyDialog";
+import WarningDialog from "./dialog/WarningDialog";
 
 interface FamilySettingsMenuProps {
     family: any;
@@ -14,8 +17,44 @@ export default function FamilySettingsMenu({
 }: FamilySettingsMenuProps) {
 
     const [isEditFamDialogOpen, setIsEditFamDialogOpen] = useState(false);
+    const [isLeaveFamilyDialogOpen, setIsLeaveFamilyDialogOpen] = useState(false);
+    const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
+    const [warningDescription, setWarningDescription] = useState("");
+    const [isCurrentUserAdmin, setIsCurrentUserAdmin] = useState(false);
 
-    const handleEditName = () => {
+    const checkAdminStatus = async () => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !family?.id) return false;
+
+            const { data: familyData, error } = await supabase
+                .from("families")
+                .select("admin_id")
+                .eq("id", family.id)
+                .single();
+
+            if (error) throw error;
+            const isAdmin = session.user.id === familyData?.admin_id;
+            setIsCurrentUserAdmin(isAdmin);
+            return isAdmin;
+        } catch (error) {
+            console.error(error);
+            setIsCurrentUserAdmin(false);
+            return false;
+        }
+    };
+
+    useEffect(() => {
+        checkAdminStatus();
+    }, [family?.id]);
+
+    const handleEditName = async () => {
+        const isAdmin = await checkAdminStatus();
+        if (!isAdmin) {
+            setWarningDescription("เฉพาะแอดมินเท่านั้นที่สามารถแก้ไขชื่อครอบครัวได้");
+            setIsWarningDialogOpen(true);
+            return;
+        }
         setIsEditFamDialogOpen(true);
     };
 
@@ -24,19 +63,31 @@ export default function FamilySettingsMenu({
     };
 
     const handleLeaveFamily = () => {
-        Alert.alert(
-            "ยืนยันการออกจากครอบครัว",
-            "แน่ใจนะว่าจะออกจากบ้านนี้? คุณจะไม่เห็นบิลและคลังสินค้าของบ้านนี้อีก",
-            [
-                { text: "ยกเลิก", style: "cancel" },
-                {
-                    text: "ออกจากบ้าน",
-                    style: "destructive",
-                    onPress: () => console.log("เตะออกจากบ้าน!"),
-                },
-            ],
-        );
-        // TODO: ยิง Supabase อัปเดต family_id ของตัวเองให้เป็น null
+        if (isCurrentUserAdmin) {
+            setWarningDescription("แอดมินไม่สามารถออกจากครอบครัวได้ กรุณาโอนสิทธิ์แอดมินให้สมาชิกคนอื่นก่อน");
+            setIsWarningDialogOpen(true);
+            return;
+        }
+
+        setIsLeaveFamilyDialogOpen(true);
+    };
+
+    const confirmLeaveFamily = async () => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+
+            const { error } = await supabase
+                .from("profiles")
+                .update({ family_id: null })
+                .eq("id", session.user.id);
+
+            if (error) throw error;
+
+            router.replace("/create-family");
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     // prettier-ignore
@@ -75,6 +126,16 @@ export default function FamilySettingsMenu({
                 familyName={family?.name}
                 familyId={family?.id}
                 profile={family?.profile}
+            />
+            <LeaveFamilyDialog
+                isOpen={isLeaveFamilyDialogOpen}
+                onOpenChange={setIsLeaveFamilyDialogOpen}
+                onConfirm={confirmLeaveFamily}
+            />
+            <WarningDialog
+                isOpen={isWarningDialogOpen}
+                onOpenChange={setIsWarningDialogOpen}
+                description={warningDescription}
             />
         </>
     );

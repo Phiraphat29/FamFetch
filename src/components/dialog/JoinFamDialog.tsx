@@ -56,7 +56,7 @@ export default function JoinFamDialog({ isOpen, onOpenChange }: JoinFamDialogPro
                             value={inviteCode}
                             onChangeText={setInviteCode}
                         />
-                        <Button variant="primary" onPress={handleJoinFamily} className="w-full flex-row items-center justify-center border border-zinc-700 rounded-full mt-4">
+                        <Button variant="primary" onPress={handleJoinFamily} className="w-full flex-row items-center justify-center rounded-full mt-4">
                             <Text className="text-white font-noto-bold text-lg ml-3">เข้าร่วมครอบครัว</Text>
                         </Button>
                     </Dialog.Content>
