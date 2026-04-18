@@ -40,11 +40,38 @@ export default function RootLayout() {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) checkFamilyStatus(session.user.id);
-      setLoading(false);
-    });
+    const clearBadSession = async () => {
+      await supabase.auth.signOut();
+      setSession(null);
+      router.replace("/login");
+    };
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session }, error }) => {
+        if (error) {
+          const msg = error.message ?? "";
+          if (
+            msg.includes("Refresh Token") ||
+            msg.includes("Invalid Refresh Token") ||
+            (error as { name?: string }).name === "AuthApiError"
+          ) {
+            void clearBadSession();
+            return;
+          }
+        }
+        setSession(session);
+        if (session) checkFamilyStatus(session.user.id);
+      })
+      .catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (msg.includes("Refresh Token") || msg.includes("Invalid Refresh")) {
+          void clearBadSession();
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -72,9 +99,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="login" />
           <Stack.Screen name="create-family" />
-          <Stack.Screen name="dashboard/index" />
-          <Stack.Screen name="dashboard/setting" options={{ headerShown: true, title: 'ตั้งค่าครอบครัว' }} />
-          <Stack.Screen name="dashboard/member" options={{ headerShown: true, title: 'รายชื่อสมาชิกครอบครัว' }} />
+          <Stack.Screen name="dashboard" options={{ headerShown: false }} />
         </Stack>
       </HeroUINativeProvider>
     </GestureHandlerRootView>

@@ -152,25 +152,26 @@ export default function FamilyMembersScreen() {
                                 </ListGroup.ItemContent>
 
                                 {/* โซนขวาสุด (ItemSuffix) สำหรับปุ่ม Action */}
-                                <ListGroup.ItemSuffix>            {isMeAdmin && !isThisMe ? (
-                                    <View className="flex-row gap-4 items-center pl-2">
-                                        <Pressable
-                                            className="active:opacity-50"
-                                            onPress={() => handleTransferAdmin(member.id, member.full_name)}
-                                        >
-                                            <Crown color="#3b82f6" size={22} />
-                                        </Pressable>
+                                <ListGroup.ItemSuffix>
+                                    {isMeAdmin && !isThisMe ? (
+                                        <View className="flex-row gap-4 items-center pl-2">
+                                            <Pressable
+                                                className="active:opacity-50"
+                                                onPress={() => handleTransferAdmin(member.id, member.full_name)}
+                                            >
+                                                <Crown color="#3b82f6" size={22} />
+                                            </Pressable>
 
-                                        <Pressable
-                                            className="active:opacity-50"
-                                            onPress={() => handleKickMember(member.id, member.full_name)}
-                                        >
-                                            <UserMinus color="#ef4444" size={22} />
-                                        </Pressable>
-                                    </View>
-                                ) : (
-                                    <View />
-                                )}
+                                            <Pressable
+                                                className="active:opacity-50"
+                                                onPress={() => handleKickMember(member.id, member.full_name)}
+                                            >
+                                                <UserMinus color="#ef4444" size={22} />
+                                            </Pressable>
+                                        </View>
+                                    ) : (
+                                        <View />
+                                    )}
                                 </ListGroup.ItemSuffix>
                             </ListGroup.Item>
                         );

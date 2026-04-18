@@ -6,8 +6,8 @@
     "web": {
       "output": "static"
     },
-    "name": "famfetch-yarn",
-    "slug": "famfetch-yarn",
+    "name": "famfetch",
+    "slug": "famfetch",
     "plugins": [
       "expo-web-browser",
       "expo-font"

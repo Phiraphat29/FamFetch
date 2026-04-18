@@ -9,15 +9,17 @@ import { router } from "expo-router";
 interface ProfileHeaderProps {
     profile: any;
     family: any;
+    /** Root layout classes; default adds vertical spacing for standalone pages. */
+    className?: string;
 }
 
-export default function ProfileHeader({ profile, family }: ProfileHeaderProps) {
+export default function ProfileHeader({ profile, family, className }: ProfileHeaderProps) {
     const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
     const [isEditFamDialogOpen, setIsEditFamDialogOpen] = useState(false);
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
     return (
-        <View className="mb-8 mt-8 w-full items-center">
+        <View className={className ?? "mb-8 mt-8 w-full items-center"}>
             <Popover isOpen={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <Popover.Trigger asChild>
                     <Pressable className="flex-row items-center gap-3">
