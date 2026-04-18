@@ -6,13 +6,30 @@ interface WarningDialogProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     description: string;
+    title?: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm?: () => void | Promise<void>;
+    isConfirming?: boolean;
+    tone?: "default" | "danger";
 }
 
 export default function WarningDialog({
     isOpen,
     onOpenChange,
     description,
+    title = "แจ้งเตือน",
+    confirmText = "ตกลง",
+    cancelText,
+    onConfirm,
+    isConfirming = false,
+    tone = "default",
 }: WarningDialogProps) {
+    const confirmButtonClassName =
+        tone === "danger"
+            ? "w-full flex-row items-center justify-center rounded-full mt-4 bg-red-600"
+            : "w-full flex-row items-center justify-center rounded-full mt-4";
+
     return (
         <Dialog isOpen={isOpen} onOpenChange={onOpenChange}>
             <Dialog.Portal>
@@ -20,21 +37,42 @@ export default function WarningDialog({
                 <KeyboardAvoidingView behavior="padding">
                     <Dialog.Content>
                         <Dialog.Close />
-                        <Dialog.Title className="text-black font-noto-bold text-xl mt-4">
-                            แจ้งเตือน
-                        </Dialog.Title>
+                        <Dialog.Title className="text-black font-noto-bold text-xl mt-4">{title}</Dialog.Title>
                         <Dialog.Description className="text-black font-noto text-sm mb-4">
                             {description}
                         </Dialog.Description>
-                        <Button
-                            variant="primary"
-                            className="w-full flex-row items-center justify-center rounded-full mt-4"
-                            onPress={() => onOpenChange(false)}
-                        >
-                            <Text className="text-white font-noto-bold text-lg">
-                                Okay
-                            </Text>
-                        </Button>
+                        {cancelText && onConfirm ? (
+                            <>
+                                <Button
+                                    variant="secondary"
+                                    className="w-full flex-row items-center justify-center rounded-full mt-2"
+                                    onPress={() => onOpenChange(false)}
+                                    isDisabled={isConfirming}
+                                >
+                                    <Text className="text-black font-noto-bold text-lg">{cancelText}</Text>
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    className={confirmButtonClassName}
+                                    onPress={() => {
+                                        void onConfirm();
+                                    }}
+                                    isDisabled={isConfirming}
+                                >
+                                    <Text className="text-white font-noto-bold text-lg">
+                                        {isConfirming ? "กำลังดำเนินการ..." : confirmText}
+                                    </Text>
+                                </Button>
+                            </>
+                        ) : (
+                            <Button
+                                variant="primary"
+                                className={confirmButtonClassName}
+                                onPress={() => onOpenChange(false)}
+                            >
+                                <Text className="text-white font-noto-bold text-lg">{confirmText}</Text>
+                            </Button>
+                        )}
                     </Dialog.Content>
                 </KeyboardAvoidingView>
             </Dialog.Portal>

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView, ActivityIndicator, Pressable, Image, Text, Alert } from "react-native";
+import { View, ScrollView, ActivityIndicator, Pressable, Image, Text } from "react-native";
 import { ListGroup } from "heroui-native";
 import { Crown, UserMinus } from "lucide-react-native";
 import { supabase } from "../../lib/supabase";
 import TransferAdminDialog from "../../components/dialog/TransferAdminDialog";
 import KickMemberDialog from "../../components/dialog/KickMemberDialog";
+import WarningDialog from "../../components/dialog/WarningDialog";
 
 export default function FamilyMembersScreen() {
     const [members, setMembers] = useState<any[]>([]);
@@ -14,6 +15,8 @@ export default function FamilyMembersScreen() {
     const [selectedMember, setSelectedMember] = useState<{ id: string; name: string } | null>(null);
     const [isTransferAdminDialogOpen, setIsTransferAdminDialogOpen] = useState(false);
     const [isKickMemberDialogOpen, setIsKickMemberDialogOpen] = useState(false);
+    const [warningMessage, setWarningMessage] = useState("");
+    const [isWarningOpen, setIsWarningOpen] = useState(false);
 
     useEffect(() => {
         fetchMembers();
@@ -78,7 +81,8 @@ export default function FamilyMembersScreen() {
             setIsTransferAdminDialogOpen(false);
             await fetchMembers();
         } catch (error: any) {
-            Alert.alert("เกิดข้อผิดพลาด", error?.message || "ไม่สามารถโอนสิทธิ์แอดมินได้");
+            setWarningMessage(error?.message || "ไม่สามารถโอนสิทธิ์แอดมินได้");
+            setIsWarningOpen(true);
         }
     };
 
@@ -93,7 +97,8 @@ export default function FamilyMembersScreen() {
             setIsKickMemberDialogOpen(false);
             await fetchMembers();
         } catch (error: any) {
-            Alert.alert("เกิดข้อผิดพลาด", error?.message || "ไม่สามารถเตะสมาชิกออกได้");
+            setWarningMessage(error?.message || "ไม่สามารถเตะสมาชิกออกได้");
+            setIsWarningOpen(true);
         }
     };
 
@@ -190,6 +195,11 @@ export default function FamilyMembersScreen() {
                 onOpenChange={setIsKickMemberDialogOpen}
                 targetUserName={selectedMember?.name || "สมาชิก"}
                 onConfirm={confirmKickMember}
+            />
+            <WarningDialog
+                isOpen={isWarningOpen}
+                onOpenChange={setIsWarningOpen}
+                description={warningMessage}
             />
         </View>
     );

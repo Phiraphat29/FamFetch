@@ -1,9 +1,10 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Button, Dialog, Input, ListGroup } from "heroui-native";
 import { Package, Pencil, Plus, Tag, Trash2 } from "lucide-react-native";
 import { supabase } from "../../../lib/supabase";
+import WarningDialog from "../../../components/dialog/WarningDialog";
 
 type InventoryItem = {
   id: string;
@@ -34,6 +35,14 @@ export default function InventoryScreen() {
   const [createForm, setCreateForm] = useState<ItemForm>(EMPTY_FORM);
   const [editForm, setEditForm] = useState<ItemForm>(EMPTY_FORM);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [warningMessage, setWarningMessage] = useState("");
+  const [isWarningOpen, setIsWarningOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null);
+
+  const openWarning = useCallback((message: string) => {
+    setWarningMessage(message);
+    setIsWarningOpen(true);
+  }, []);
 
   const itemCountLabel = useMemo(() => `${items.length} templates`, [items.length]);
 
@@ -94,7 +103,7 @@ export default function InventoryScreen() {
   const onCreateItem = async () => {
     if (!familyId) return;
     if (!createForm.name.trim()) {
-      Alert.alert("ไม่พบชื่อสินค้า", "กรุณากรอกชื่อสินค้า");
+      openWarning("กรุณากรอกชื่อสินค้า");
       return;
     }
 
@@ -112,7 +121,7 @@ export default function InventoryScreen() {
       await fetchInventory();
     } catch (error) {
       const message = error instanceof Error ? error.message : "ไม่สามารถเพิ่มสินค้าได้";
-      Alert.alert("ไม่สามารถเพิ่มสินค้าได้", message);
+      openWarning(message);
     } finally {
       setSubmitting(false);
     }
@@ -127,7 +136,7 @@ export default function InventoryScreen() {
   const onUpdateItem = async () => {
     if (!selectedItem || !familyId) return;
     if (!editForm.name.trim()) {
-      Alert.alert("ไม่พบชื่อสินค้า", "กรุณากรอกชื่อสินค้า");
+      openWarning("กรุณากรอกชื่อสินค้า");
       return;
     }
 
@@ -148,35 +157,32 @@ export default function InventoryScreen() {
       await fetchInventory();
     } catch (error) {
       const message = error instanceof Error ? error.message : "ไม่สามารถอัปเดตสินค้าได้";
-      Alert.alert("ไม่สามารถอัปเดตสินค้าได้", message);
+      openWarning(message);
     } finally {
       setSubmitting(false);
     }
   };
 
   const onDeleteItem = (item: InventoryItem) => {
-    Alert.alert("ลบสินค้า", `ลบ "${item.name}" จากคลังสินค้า?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            if (!familyId) return;
-            const { error } = await supabase
-              .from("items")
-              .delete()
-              .eq("id", item.id)
-              .eq("family_id", familyId);
-            if (error) throw error;
-            await fetchInventory();
-          } catch (error) {
-            const message = error instanceof Error ? error.message : "ไม่สามารถลบสินค้าได้";
-            Alert.alert("ไม่สามารถลบสินค้าได้", message);
-          }
-        },
-      },
-    ]);
+    setDeleteTarget(item);
+  };
+
+  const confirmDeleteItem = async () => {
+    if (!familyId || !deleteTarget) return;
+
+    try {
+      setSubmitting(true);
+      const { error } = await supabase.from("items").delete().eq("id", deleteTarget.id).eq("family_id", familyId);
+      if (error) throw error;
+      setDeleteTarget(null);
+      await fetchInventory();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "ไม่สามารถลบสินค้าได้";
+      setDeleteTarget(null);
+      openWarning(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -332,6 +338,25 @@ export default function InventoryScreen() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog>
+
+      <WarningDialog
+        isOpen={isWarningOpen}
+        onOpenChange={setIsWarningOpen}
+        description={warningMessage}
+      />
+      <WarningDialog
+        isOpen={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="ลบสินค้า"
+        description={`ลบ "${deleteTarget?.name ?? "สินค้า"}" จากคลังสินค้า?`}
+        cancelText="ยกเลิก"
+        confirmText="ลบ"
+        onConfirm={confirmDeleteItem}
+        isConfirming={submitting}
+        tone="danger"
+      />
     </View>
   );
 }

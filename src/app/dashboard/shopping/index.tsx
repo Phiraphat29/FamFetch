@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Button, Dialog, Input, ListGroup } from "heroui-native";
 import { CalendarDays, CheckCircle2, CircleDashed, Pencil, Plus, Trash2 } from "lucide-react-native";
 import { supabase } from "../../../lib/supabase";
+import WarningDialog from "../../../components/dialog/WarningDialog";
 
 type ShoppingTrip = {
   id: string;
@@ -23,6 +24,14 @@ export default function ShoppingTripsOverviewScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [titleInput, setTitleInput] = useState("");
   const [selectedTrip, setSelectedTrip] = useState<ShoppingTrip | null>(null);
+  const [warningMessage, setWarningMessage] = useState("");
+  const [isWarningOpen, setIsWarningOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ShoppingTrip | null>(null);
+
+  const openWarning = useCallback((message: string) => {
+    setWarningMessage(message);
+    setIsWarningOpen(true);
+  }, []);
 
   const fetchTrips = useCallback(async () => {
     try {
@@ -81,7 +90,7 @@ export default function ShoppingTripsOverviewScreen() {
   const createTrip = async () => {
     if (!familyId) return;
     if (!titleInput.trim()) {
-      Alert.alert("Missing trip name", "Please enter a trip title.");
+      openWarning("Please enter a trip title.");
       return;
     }
 
@@ -98,7 +107,7 @@ export default function ShoppingTripsOverviewScreen() {
       await fetchTrips();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create trip.";
-      Alert.alert("Create failed", message);
+      openWarning(message);
     } finally {
       setSubmitting(false);
     }
@@ -113,7 +122,7 @@ export default function ShoppingTripsOverviewScreen() {
   const updateTrip = async () => {
     if (!selectedTrip || !familyId) return;
     if (!titleInput.trim()) {
-      Alert.alert("Missing trip name", "Please enter a trip title.");
+      openWarning("Please enter a trip title.");
       return;
     }
 
@@ -132,35 +141,36 @@ export default function ShoppingTripsOverviewScreen() {
       await fetchTrips();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update trip.";
-      Alert.alert("Update failed", message);
+      openWarning(message);
     } finally {
       setSubmitting(false);
     }
   };
 
   const removeTrip = (trip: ShoppingTrip) => {
-    Alert.alert("Delete trip", `Delete "${trip.title}" and all item entries in it?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            if (!familyId) return;
-            const { error } = await supabase
-              .from("shopping_lists")
-              .delete()
-              .eq("id", trip.id)
-              .eq("family_id", familyId);
-            if (error) throw error;
-            await fetchTrips();
-          } catch (error) {
-            const message = error instanceof Error ? error.message : "Failed to delete trip.";
-            Alert.alert("Delete failed", message);
-          }
-        },
-      },
-    ]);
+    setDeleteTarget(trip);
+  };
+
+  const confirmRemoveTrip = async () => {
+    if (!familyId || !deleteTarget) return;
+
+    try {
+      setSubmitting(true);
+      const { error } = await supabase
+        .from("shopping_lists")
+        .delete()
+        .eq("id", deleteTarget.id)
+        .eq("family_id", familyId);
+      if (error) throw error;
+      setDeleteTarget(null);
+      await fetchTrips();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete trip.";
+      setDeleteTarget(null);
+      openWarning(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const toggleCompleted = async (trip: ShoppingTrip) => {
@@ -175,7 +185,7 @@ export default function ShoppingTripsOverviewScreen() {
       await fetchTrips();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update status.";
-      Alert.alert("Update failed", message);
+      openWarning(message);
     }
   };
 
@@ -312,6 +322,24 @@ export default function ShoppingTripsOverviewScreen() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog>
+      <WarningDialog
+        isOpen={isWarningOpen}
+        onOpenChange={setIsWarningOpen}
+        description={warningMessage}
+      />
+      <WarningDialog
+        isOpen={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="Delete trip"
+        description={`Delete "${deleteTarget?.title ?? "trip"}" and all item entries in it?`}
+        cancelText="Cancel"
+        confirmText="Delete"
+        onConfirm={confirmRemoveTrip}
+        isConfirming={submitting}
+        tone="danger"
+      />
     </View>
   );
 }

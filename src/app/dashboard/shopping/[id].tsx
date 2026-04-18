@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, BackHandler, Pressable, ScrollView, Text, useColorScheme, View } from "react-native";
+import { ActivityIndicator, BackHandler, Pressable, ScrollView, Text, useColorScheme, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Checkbox, Dialog, Input, ListGroup } from "heroui-native";
 import { Check, ChevronLeft, CircleDashed, DollarSign, Plus, Trash2, Undo2 } from "lucide-react-native";
 import { supabase } from "../../../lib/supabase";
+import WarningDialog from "../../../components/dialog/WarningDialog";
 
 type ItemTemplate = {
   id: string;
@@ -61,6 +62,14 @@ export default function ShoppingListDetailScreen() {
   const [selectedListItem, setSelectedListItem] = useState<ListItemRow | null>(null);
   const [checkoutPrice, setCheckoutPrice] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
+  const [isWarningOpen, setIsWarningOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ListItemRow | null>(null);
+
+  const openWarning = useCallback((message: string) => {
+    setWarningMessage(message);
+    setIsWarningOpen(true);
+  }, []);
 
   const pendingItems = useMemo(() => listItems.filter((item) => !item.is_bought), [listItems]);
   const boughtItems = useMemo(() => listItems.filter((item) => !!item.is_bought), [listItems]);
@@ -174,16 +183,13 @@ export default function ShoppingListDetailScreen() {
 
   const addItemsToTrip = async () => {
     if (!tripId) {
-      Alert.alert("ข้อผิดพลาด", "ไม่พบรายการทริป");
+      openWarning("ไม่พบรายการทริป");
       return;
     }
 
     const toAdd = [...selectedTemplateIds].filter((id) => !isTemplateAlreadyPending(id));
     if (toAdd.length === 0) {
-      Alert.alert(
-        "ยังไม่ได้เลือกรายการ",
-        "เลือกอย่างน้อยหนึ่งเทมเพลตที่ยังไม่อยู่ในส่วนรอซื้อ หรือรายการที่เลือกอยู่ในบิลแล้วทั้งหมด"
-      );
+      openWarning("เลือกอย่างน้อยหนึ่งเทมเพลตที่ยังไม่อยู่ในส่วนรอซื้อ หรือรายการที่เลือกอยู่ในบิลแล้วทั้งหมด");
       return;
     }
 
@@ -199,7 +205,7 @@ export default function ShoppingListDetailScreen() {
       await loadData();
     } catch (error) {
       const message = error instanceof Error ? error.message : "เพิ่มรายการไม่สำเร็จ";
-      Alert.alert("เพิ่มรายการไม่สำเร็จ", message);
+      openWarning(message);
     } finally {
       setSubmitting(false);
     }
@@ -216,7 +222,7 @@ export default function ShoppingListDetailScreen() {
 
     const parsedPrice = Number(checkoutPrice);
     if (!checkoutPrice || Number.isNaN(parsedPrice) || parsedPrice < 0) {
-      Alert.alert("ราคาสินค้าไม่ถูกต้อง", "กรุณากรอกราคาสินค้าให้ถูกต้อง");
+      openWarning("กรุณากรอกราคาสินค้าให้ถูกต้อง");
       return;
     }
 
@@ -239,7 +245,7 @@ export default function ShoppingListDetailScreen() {
       await loadData();
     } catch (error) {
       const message = error instanceof Error ? error.message : "ไม่สามารถทำเครื่องหมายว่าซื้อแล้วได้";
-      Alert.alert("Checkout failed", message);
+      openWarning(message);
     } finally {
       setSubmitting(false);
     }
@@ -260,32 +266,34 @@ export default function ShoppingListDetailScreen() {
       await loadData();
     } catch (error) {
       const message = error instanceof Error ? error.message : "ไม่สามารถย้อนกลับสินค้าได้";
-      Alert.alert("Update failed", message);
+      openWarning(message);
     }
   };
 
   const removeListItem = (item: ListItemRow) => {
-    Alert.alert("ลบสินค้า", `ลบ "${item.item?.name ?? "สินค้า"}" จากรายการซื้อของนี้?`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "ลบ",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const { error } = await supabase
-              .from("list_items")
-              .delete()
-              .eq("id", item.id)
-              .eq("list_id", tripId);
-            if (error) throw error;
-            await loadData();
-          } catch (error) {
-            const message = error instanceof Error ? error.message : "ไม่สามารถลบสินค้าได้";
-            Alert.alert("ไม่สามารถลบสินค้าได้", message);
-          }
-        },
-      },
-    ]);
+    setDeleteTarget(item);
+  };
+
+  const confirmRemoveListItem = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      setSubmitting(true);
+      const { error } = await supabase
+        .from("list_items")
+        .delete()
+        .eq("id", deleteTarget.id)
+        .eq("list_id", tripId);
+      if (error) throw error;
+      setDeleteTarget(null);
+      await loadData();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "ไม่สามารถลบสินค้าได้";
+      setDeleteTarget(null);
+      openWarning(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -521,6 +529,24 @@ export default function ShoppingListDetailScreen() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog>
+      <WarningDialog
+        isOpen={isWarningOpen}
+        onOpenChange={setIsWarningOpen}
+        description={warningMessage}
+      />
+      <WarningDialog
+        isOpen={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="ลบสินค้า"
+        description={`ลบ "${deleteTarget?.item?.name ?? "สินค้า"}" จากรายการซื้อของนี้?`}
+        cancelText="Cancel"
+        confirmText="ลบ"
+        onConfirm={confirmRemoveListItem}
+        isConfirming={submitting}
+        tone="danger"
+      />
     </View>
   );
 }
