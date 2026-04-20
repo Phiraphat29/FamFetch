@@ -6,10 +6,9 @@ import LogoutDialog from "./dialog/LogoutDialog";
 import EditFamDialog from "./dialog/EditFamDialog";
 import { router } from "expo-router";
 
-interface ProfileHeaderProps {
+type ProfileHeaderProps = {
     profile: any;
     family: any;
-    /** Root layout classes; default adds vertical spacing for standalone pages. */
     className?: string;
 }
 

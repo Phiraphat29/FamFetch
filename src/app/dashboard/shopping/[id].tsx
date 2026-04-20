@@ -58,6 +58,9 @@ export default function ShoppingListDetailScreen() {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(() => new Set());
+  const [templatePage, setTemplatePage] = useState(1);
+  const [newTemplateName, setNewTemplateName] = useState("");
+  const [creatingTemplate, setCreatingTemplate] = useState(false);
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
   const [selectedListItem, setSelectedListItem] = useState<ListItemRow | null>(null);
   const [checkoutPrice, setCheckoutPrice] = useState("");
@@ -77,6 +80,12 @@ export default function ShoppingListDetailScreen() {
     () => boughtItems.reduce((sum, item) => sum + (Number(item.purchased_price) || 0), 0),
     [boughtItems]
   );
+  const TEMPLATE_PAGE_SIZE = 4;
+  const totalTemplatePages = Math.max(1, Math.ceil(templates.length / TEMPLATE_PAGE_SIZE));
+  const paginatedTemplates = useMemo(() => {
+    const start = (templatePage - 1) * TEMPLATE_PAGE_SIZE;
+    return templates.slice(start, start + TEMPLATE_PAGE_SIZE);
+  }, [templatePage, templates]);
 
   const loadData = useCallback(async () => {
     if (!tripId) {
@@ -164,7 +173,11 @@ export default function ShoppingListDetailScreen() {
 
   const setAddDialogOpen = useCallback((open: boolean) => {
     setIsAddDialogOpen(open);
-    if (!open) setSelectedTemplateIds(new Set());
+    if (!open) {
+      setSelectedTemplateIds(new Set());
+      setNewTemplateName("");
+      setTemplatePage(1);
+    }
   }, []);
 
   const toggleTemplateSelection = useCallback((templateId: string, selected: boolean) => {
@@ -208,6 +221,48 @@ export default function ShoppingListDetailScreen() {
       openWarning(message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const createTemplateFromDialog = async () => {
+    if (!familyId) {
+      openWarning("ไม่พบครอบครัวของคุณ");
+      return;
+    }
+    const name = newTemplateName.trim();
+    if (!name) {
+      openWarning("กรุณากรอกชื่อสินค้า");
+      return;
+    }
+
+    try {
+      setCreatingTemplate(true);
+      const { data, error } = await supabase
+        .from("items")
+        .insert({
+          family_id: familyId,
+          name,
+          category: null,
+        })
+        .select("id,family_id,name,category")
+        .single();
+      if (error) throw error;
+
+      if (data) {
+        setTemplates((prev) => [...prev, data as ItemTemplate].sort((a, b) => a.name.localeCompare(b.name)));
+        setSelectedTemplateIds((prev) => {
+          const next = new Set(prev);
+          next.add(data.id);
+          return next;
+        });
+        setTemplatePage(totalTemplatePages);
+      }
+      setNewTemplateName("");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "ไม่สามารถสร้างเทมเพลตสินค้าได้";
+      openWarning(message);
+    } finally {
+      setCreatingTemplate(false);
     }
   };
 
@@ -449,18 +504,26 @@ export default function ShoppingListDetailScreen() {
           <Dialog.Overlay />
           <Dialog.Content>
             <Dialog.Close />
-            <Dialog.Title className="mt-3 text-xl text-black dark:text-white font-noto-bold">เพิ่มเทมเพลตสินค้า</Dialog.Title>
+            <Dialog.Title className="mt-3 text-xl text-black dark:text-white font-noto-bold">เพิ่มสินค้าจากเทมเพลตสินค้า</Dialog.Title>
             <Dialog.Description className="mb-3 text-sm text-gray-600 dark:text-zinc-300 font-noto">
               เลือกได้หลายรายการ (ช่องทำเครื่องหมาย) แล้วกดเพิ่มเข้าไปในรายการซื้อของนี้
             </Dialog.Description>
-            <ListGroup className="max-h-72 rounded-2xl border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800 overflow-hidden">
-              {templates.map((template) => {
-                const alreadyPending = isTemplateAlreadyPending(template.id);
-                const isChecked = alreadyPending || selectedTemplateIds.has(template.id);
-                return (
-                  <ListGroup.Item key={template.id}>
-                    <ListGroup.ItemPrefix>
-                      <View className="py-1 pr-1">
+            <View className="rounded-2xl border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800 overflow-hidden">
+              {templates.length === 0 ? (
+                <View className="items-center p-5">
+                  <Text className="text-sm text-gray-500 dark:text-zinc-400 font-noto">ยังไม่มีเทมเพลตสินค้า</Text>
+                </View>
+              ) : (
+                paginatedTemplates.map((template, index) => {
+                  const alreadyPending = isTemplateAlreadyPending(template.id);
+                  const isChecked = alreadyPending || selectedTemplateIds.has(template.id);
+                  return (
+                    <View
+                      key={template.id}
+                      className="flex-row items-center px-3 py-3"
+                      style={{ borderBottomWidth: index === paginatedTemplates.length - 1 ? 0 : 1, borderBottomColor: "#e5e7eb" }}
+                    >
+                      <View className="py-1 pr-2">
                         <Checkbox
                           isSelected={isChecked}
                           onSelectedChange={(selected) => {
@@ -470,9 +533,8 @@ export default function ShoppingListDetailScreen() {
                           isDisabled={alreadyPending}
                         />
                       </View>
-                    </ListGroup.ItemPrefix>
-                    <ListGroup.ItemContent>
                       <Pressable
+                        className="flex-1"
                         accessibilityRole="button"
                         disabled={alreadyPending}
                         onPress={() => {
@@ -480,20 +542,58 @@ export default function ShoppingListDetailScreen() {
                           toggleTemplateSelection(template.id, !selectedTemplateIds.has(template.id));
                         }}
                       >
-                        <ListGroup.ItemTitle className="text-base text-black dark:text-white font-noto-bold">
-                          {template.name}
-                        </ListGroup.ItemTitle>
-                        <ListGroup.ItemDescription className="text-xs text-gray-500 dark:text-zinc-400 font-noto">
-                          {alreadyPending
-                            ? "อยู่ในส่วนรอซื้อแล้ว"
-                            : template.category || "ไม่ได้ระบุหมวดหมู่"}
-                        </ListGroup.ItemDescription>
+                        <Text className="text-base text-black dark:text-white font-noto-bold">{template.name}</Text>
+                        <Text className="text-xs text-gray-500 dark:text-zinc-400 font-noto">
+                          {alreadyPending ? "อยู่ในส่วนรอซื้อแล้ว" : template.category || "ไม่ได้ระบุหมวดหมู่"}
+                        </Text>
                       </Pressable>
-                    </ListGroup.ItemContent>
-                  </ListGroup.Item>
-                );
-              })}
-            </ListGroup>
+                    </View>
+                  );
+                })
+              )}
+            </View>
+            {templates.length > 0 ? (
+              <View className="mt-2 flex-row items-center justify-between">
+                <Button
+                  variant="secondary"
+                  className="rounded-full px-3"
+                  isDisabled={templatePage <= 1}
+                  onPress={() => setTemplatePage((prev) => Math.max(1, prev - 1))}
+                >
+                  <Text className="text-xs text-black dark:text-white font-noto-bold">ก่อนหน้า</Text>
+                </Button>
+                <Text className="text-xs text-gray-500 dark:text-zinc-400 font-noto">
+                  หน้า {templatePage} / {totalTemplatePages}
+                </Text>
+                <Button
+                  variant="secondary"
+                  className="rounded-full px-3"
+                  isDisabled={templatePage >= totalTemplatePages}
+                  onPress={() => setTemplatePage((prev) => Math.min(totalTemplatePages, prev + 1))}
+                >
+                  <Text className="text-xs text-black dark:text-white font-noto-bold">ถัดไป</Text>
+                </Button>
+              </View>
+            ) : null}
+            <View className="mt-3 rounded-xl border border-gray-200 p-3 dark:border-zinc-700">
+              <Text className="mb-2 text-sm text-gray-700 dark:text-zinc-200 font-noto-bold">เพิ่มเทมเพลตใหม่อย่างรวดเร็ว</Text>
+              <Input
+                className="border border-gray-300 p-3"
+                placeholder="ชื่อสินค้าใหม่ (เช่น ไข่ไก่)"
+                value={newTemplateName}
+                onChangeText={setNewTemplateName}
+              />
+              <Button
+                variant="secondary"
+                className="mt-2 rounded-full"
+                isDisabled={creatingTemplate || !newTemplateName.trim()}
+                onPress={createTemplateFromDialog}
+              >
+                <Text className="text-sm text-black dark:text-white font-noto-bold">
+                  {creatingTemplate ? "กำลังสร้างเทมเพลต..." : "สร้างเทมเพลตและเลือกอัตโนมัติ"}
+                </Text>
+              </Button>
+            </View>
             <Button variant="primary" className="mt-4 rounded-full" isDisabled={submitting} onPress={addItemsToTrip}>
               <Text className="text-base text-white font-noto-bold">
                 {submitting

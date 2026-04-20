@@ -1,10 +1,9 @@
-import { View, Text, KeyboardAvoidingView, } from 'react-native'
+import { Text, KeyboardAvoidingView, } from 'react-native'
 import React from 'react'
 import { Dialog, Button } from 'heroui-native'
-import { LogOut } from 'lucide-react-native'
 import { supabase } from '../../lib/supabase';
 
-interface LogoutDialogProps {
+type LogoutDialogProps = {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
 }

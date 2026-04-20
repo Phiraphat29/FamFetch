@@ -10,7 +10,7 @@ function asString(v: string | string[] | undefined): string {
     return Array.isArray(v) ? (v[0] ?? '') : v;
 }
 
-interface EditFamDialogProps {
+type EditFamDialogProps = {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     familyName: string | string[] | undefined;
@@ -92,7 +92,7 @@ export default function EditFamDialog({ isOpen, onOpenChange, familyName, family
 
     return (
         <>
-            <Dialog isOpen={isOpen} onOpenChange={onOpenChange} className="w-full">
+            <Dialog isOpen={isOpen} onOpenChange={onOpenChange} className="w-full ">
                 <Dialog.Portal>
                     <Dialog.Overlay />
                     <KeyboardAvoidingView behavior="padding">

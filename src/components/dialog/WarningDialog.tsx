@@ -2,7 +2,7 @@ import React from "react";
 import { KeyboardAvoidingView, Text } from "react-native";
 import { Button, Dialog } from "heroui-native";
 
-interface WarningDialogProps {
+type WarningDialogProps = {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     description: string;

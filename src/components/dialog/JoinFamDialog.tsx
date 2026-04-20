@@ -5,7 +5,7 @@ import { PlusIcon } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { router } from 'expo-router';
 
-interface JoinFamDialogProps {
+type JoinFamDialogProps = {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
 }

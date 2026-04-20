@@ -2,7 +2,7 @@ import React from "react";
 import { Text } from "react-native";
 import { Card, Button, SurfaceVariant } from "heroui-native";
 
-interface MenuActionCardProps {
+type MenuActionCardProps = {
     title: string;
     description: string;
     icon: React.ReactNode;

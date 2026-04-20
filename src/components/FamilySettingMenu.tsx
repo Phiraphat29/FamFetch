@@ -8,7 +8,7 @@ import { supabase } from "../lib/supabase";
 import LeaveFamilyDialog from "./dialog/LeaveFamilyDialog";
 import WarningDialog from "./dialog/WarningDialog";
 
-interface FamilySettingsMenuProps {
+type FamilySettingsMenuProps = {
     family: any;
 }
 

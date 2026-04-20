@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Text } from "react-native";
 import { Button, Dialog } from "heroui-native";
 import { supabase } from "../../lib/supabase";
 
-interface LeaveFamilyDialogProps {
+type LeaveFamilyDialogProps = {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     onConfirm: () => void;
