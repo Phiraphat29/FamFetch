@@ -1,7 +1,7 @@
 import { Tabs, useSegments } from "expo-router";
 import { Home, Package, ShoppingCart } from "lucide-react-native";
 import { ActivityIndicator, useColorScheme, View } from "react-native";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
 import { TabBarIcon, type LucideTabIconComponent } from "../../components/TabBarIcon";
@@ -17,7 +17,6 @@ const ACTIVE_DARK = "#fafafa";
 const INACTIVE_LIGHT = "#a1a1aa";
 const INACTIVE_DARK = "#71717a";
 
-/** Show shared header only on the three main tab roots, not on stack-style child routes. */
 function shouldShowProfileHeaderFromSegments(segments: string[]): boolean {
   const s = segments.filter(Boolean);
   const i = s.indexOf("dashboard");
@@ -106,6 +105,36 @@ export default function DashboardTabLayout() {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+
+  const wasOnSettingRef = useRef(false);
+  useEffect(() => {
+    const s = (segments as string[]).filter(Boolean);
+    const onSetting = s.includes("setting");
+    if (wasOnSettingRef.current && !onSetting) {
+      void loadProfile();
+    }
+    wasOnSettingRef.current = onSetting;
+  }, [segments, loadProfile]);
+
+  useEffect(() => {
+    const fid = family?.id;
+    if (typeof fid !== "string") return;
+
+    const channel = supabase
+      .channel(`dashboard-layout-family-${fid}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "families", filter: `id=eq.${fid}` },
+        () => {
+          void loadProfile();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [family?.id, loadProfile]);
 
   const activeTint = isDark ? ACTIVE_DARK : ACTIVE_LIGHT;
   const inactiveTint = isDark ? INACTIVE_DARK : INACTIVE_LIGHT;
