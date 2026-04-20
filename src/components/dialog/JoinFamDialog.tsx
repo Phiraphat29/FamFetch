@@ -38,7 +38,7 @@ export default function JoinFamDialog({ isOpen, onOpenChange }: JoinFamDialogPro
     return (
         <Dialog isOpen={isOpen} onOpenChange={onOpenChange} className="w-full">
             <Dialog.Trigger asChild>
-                <Button variant="primary" className="w-full flex-row items-center justify-center bg-white border border-zinc-700 rounded-full mt-4">
+                <Button variant="primary" size="lg" className="w-full flex-row items-center justify-center bg-white border border-zinc-700 rounded-full mt-4">
                     <PlusIcon size={24} color="#000" />
                     <Text className="text-black font-noto-bold text-lg ml-3">เข้าร่วมครอบครัว</Text>
                 </Button>
@@ -49,12 +49,12 @@ export default function JoinFamDialog({ isOpen, onOpenChange }: JoinFamDialogPro
                     <Dialog.Content>
                         <Dialog.Close />
                         <Dialog.Title className="text-black font-noto-bold text-xl mt-4">เข้าร่วมครอบครัว</Dialog.Title>
-                        <Dialog.Description className="text-black font-noto text-sm mb-4">กรุณากรอกรหัสครอบครัวของคุณ</Dialog.Description>
+                        <Dialog.Description className="text-black font-noto text-sm mb-4">กรุณากรอกรหัสครอบครัวที่คุณต้องการจะเข้าร่วม</Dialog.Description>
                         <Input
-                            className="border border-zinc-400 p-4 mb-2"
+                            className="border border-zinc-400 p-4 mb-2 font-noto"
                             placeholder="รหัสครอบครัว"
                             value={inviteCode}
-                            onChangeText={setInviteCode}
+                            onChangeText={(text) => setInviteCode(text.toUpperCase())}
                         />
                         <Button variant="primary" onPress={handleJoinFamily} className="w-full flex-row items-center justify-center rounded-full mt-4">
                             <Text className="text-white font-noto-bold text-lg ml-3">เข้าร่วมครอบครัว</Text>

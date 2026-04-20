@@ -138,8 +138,12 @@ export default function DashboardTabLayout() {
         <Tabs
           screenOptions={{
             headerShown: false,
+            animation: "fade",
             tabBarActiveTintColor: activeTint,
             tabBarInactiveTintColor: inactiveTint,
+            sceneStyle: {
+              backgroundColor: isDark ? "#18181b" : "#f9fafb",
+            },
             tabBarLabelStyle: {
               fontSize: 11,
               fontFamily: "NotoSansThai_400Regular",
@@ -188,7 +192,7 @@ export default function DashboardTabLayout() {
           <Tabs.Screen
             name="shopping/index"
             options={{
-              tabBarLabel: "บิลซื้อของ",
+              tabBarLabel: "ทริปซื้อของ",
               tabBarIcon: tabIcon(ShoppingCart),
             }}
           />

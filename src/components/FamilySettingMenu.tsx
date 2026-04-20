@@ -21,6 +21,7 @@ export default function FamilySettingsMenu({
     const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
     const [warningDescription, setWarningDescription] = useState("");
     const [isCurrentUserAdmin, setIsCurrentUserAdmin] = useState(false);
+    const [canDeleteFamilyOnLeave, setCanDeleteFamilyOnLeave] = useState(false);
 
     const checkAdminStatus = async () => {
         try {
@@ -37,6 +38,7 @@ export default function FamilySettingsMenu({
             const isAdmin = session.user.id === familyData?.admin_id;
             setIsCurrentUserAdmin(isAdmin);
             return isAdmin;
+
         } catch (error) {
             console.error(error);
             setIsCurrentUserAdmin(false);
@@ -62,14 +64,36 @@ export default function FamilySettingsMenu({
         router.push({ pathname: '/dashboard/member' });
     };
 
-    const handleLeaveFamily = () => {
-        if (isCurrentUserAdmin) {
-            setWarningDescription("แอดมินไม่สามารถออกจากครอบครัวได้ กรุณาโอนสิทธิ์แอดมินให้สมาชิกคนอื่นก่อน");
-            setIsWarningDialogOpen(true);
-            return;
-        }
+    const handleLeaveFamily = async () => {
+        try {
+            const isAdmin = await checkAdminStatus();
+            setCanDeleteFamilyOnLeave(false);
 
-        setIsLeaveFamilyDialogOpen(true);
+            if (isAdmin) {
+                const { count, error: countError } = await supabase
+                    .from("profiles")
+                    .select("id", { count: "exact", head: true })
+                    .eq("family_id", family?.id);
+
+                if (countError) throw countError;
+
+                if ((count ?? 0) <= 1) {
+                    setCanDeleteFamilyOnLeave(true);
+                    setIsLeaveFamilyDialogOpen(true);
+                    return;
+                }
+
+                setWarningDescription("แอดมินไม่สามารถออกจากครอบครัวได้ กรุณาโอนสิทธิ์แอดมินให้สมาชิกคนอื่นก่อน");
+                setIsWarningDialogOpen(true);
+                return;
+            }
+
+            setIsLeaveFamilyDialogOpen(true);
+        } catch (error) {
+            console.error(error);
+            setWarningDescription("ไม่สามารถตรวจสอบสถานะครอบครัวได้ กรุณาลองใหม่อีกครั้ง");
+            setIsWarningDialogOpen(true);
+        }
     };
 
     const confirmLeaveFamily = async () => {
@@ -83,6 +107,15 @@ export default function FamilySettingsMenu({
                 .eq("id", session.user.id);
 
             if (error) throw error;
+
+            if (canDeleteFamilyOnLeave && family?.id) {
+                const { error: deleteFamilyError } = await supabase
+                    .from("families")
+                    .delete()
+                    .eq("id", family.id);
+
+                if (deleteFamilyError) throw deleteFamilyError;
+            }
 
             router.replace("/create-family");
         } catch (error) {
@@ -131,6 +164,7 @@ export default function FamilySettingsMenu({
                 isOpen={isLeaveFamilyDialogOpen}
                 onOpenChange={setIsLeaveFamilyDialogOpen}
                 onConfirm={confirmLeaveFamily}
+                familyId={family?.id}
             />
             <WarningDialog
                 isOpen={isWarningDialogOpen}

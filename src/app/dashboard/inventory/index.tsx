@@ -201,7 +201,7 @@ export default function InventoryScreen() {
           <View className="flex-1 pr-3">
             <Text className="text-2xl text-black dark:text-white font-noto-bold">คลังสินค้า</Text>
             <Text className="mt-1 text-sm text-gray-600 dark:text-zinc-300 font-noto">
-              สินค้าที่ต้องซื้อของครอบครัว
+              คลังสินค้าเทมเพลตของครอบครัว
             </Text>
             <Text className="mt-1 text-xs text-gray-500 dark:text-zinc-400 font-noto">{itemCountLabel}</Text>
           </View>
@@ -288,9 +288,9 @@ export default function InventoryScreen() {
           <Dialog.Overlay />
           <Dialog.Content>
             <Dialog.Close />
-            <Dialog.Title className="mt-3 text-xl text-black font-noto-bold">สร้างรายการสินค้า</Dialog.Title>
+            <Dialog.Title className="mt-3 text-xl text-black font-noto-bold">สร้างเทมเพลตสินค้า</Dialog.Title>
             <Dialog.Description className="mb-4 text-sm text-gray-600 font-noto">
-              สร้างรายการสินค้าที่ต้องซื้อของครอบครัว
+              สร้างเทมเพลตสินค้าที่ต้องซื้อของครอบครัว
             </Dialog.Description>
             <Input
               className="mb-3 border border-gray-300 p-3"
@@ -305,7 +305,7 @@ export default function InventoryScreen() {
               onChangeText={(value) => setCreateForm((prev) => ({ ...prev, category: value }))}
             />
             <Button variant="primary" className="mt-4 rounded-full" isDisabled={submitting} onPress={onCreateItem}>
-              <Text className="text-base text-white font-noto-bold">{submitting ? "กำลังบันทึก..." : "บันทึกรายการสินค้า"}</Text>
+              <Text className="text-base text-white font-noto-bold">{submitting ? "กำลังบันทึก..." : "บันทึกเทมเพลตสินค้า"}</Text>
             </Button>
           </Dialog.Content>
         </Dialog.Portal>

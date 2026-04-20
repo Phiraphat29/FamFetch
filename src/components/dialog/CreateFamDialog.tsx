@@ -63,7 +63,7 @@ export default function CreateFamDialog({ isOpen, onOpenChange }: CreateFamDialo
                         <Dialog.Title className="text-black font-noto-bold text-xl mt-4">สร้างครอบครัว</Dialog.Title>
                         <Dialog.Description className="text-black font-noto text-sm mb-4">กรุณากรอกข้อมูลครอบครัวของคุณ</Dialog.Description>
                         <Input
-                            className="border border-zinc-400 p-4 mb-2"
+                            className="border border-zinc-400 p-4 mb-2 font-noto"
                             placeholder="ชื่อครอบครัว"
                             value={name}
                             onChangeText={setName}
